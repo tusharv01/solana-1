@@ -67,3 +67,49 @@ fn process_instruction(
     }
     Ok(())
 }
+pub struct AccountInfo<'a> {
+    pub key: &'a Pubkey,
+    pub is_signer: bool,
+    pub is_writable: bool,
+    pub data: Rc<RefCell<&'a mut [u8]>>,
+    pub owner: &'a Pubkey,
+    pub lamports: &'a mut u64,
+    pub executable: bool,
+    pub rent_epoch: Epoch,
+}
+let account_info = AccountInfo {
+    key: &key,
+    is_signer: false,
+    is_writable: true,
+    data: Rc::new(RefCell::new(&mut data)),
+    owner: &owner,
+    lamports: &mut lamports,
+    executable: false,
+    rent_epoch: 0,
+};
+// Assume that the data length is stored in the RO segment of the BPF ELF.
+const DATA_LEN: usize = 128;
+
+// Allocate a buffer in RW memory to store the data.
+let mut data = vec![0u8; DATA_LEN];
+
+// Get a raw pointer to the data buffer.
+let data_ptr = data.as_mut_ptr();
+
+// Create a slice from the raw pointer and length.
+let data_slice = unsafe { std::slice::from_raw_parts(data_ptr, DATA_LEN) };
+
+// Create a reference-counted pointer to the slice.
+let data_rc = Rc::new(RefCell::new(data_slice));
+
+// Use the reference-counted pointer to create an AccountInfo object.
+let account_info = AccountInfo {
+    key: &key,
+    is_signer: false,
+    is_writable: true,
+    data: data_rc,
+    owner: &owner,
+    lamports: &mut lamports,
+    executable: false,
+    rent_epoch: 0,
+};
